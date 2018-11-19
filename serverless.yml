@@ -1,0 +1,54 @@
+service: gitlab-unfurly
+
+functions:
+  unfurl:
+    handler: unfurl_message.unfurl
+    description: Take a GitLab URL posted on Slack and add rich info as an attachment to it
+    timeout: 30
+    environment:
+      SLACK_TOKEN: ${env:SLACK_TOKEN}
+      GITLAB_TOKEN: ${env:GITLAB_TOKEN}
+    events:
+      - http:
+          method: post
+          path: /
+
+  start-login:
+    handler: unfurl_message.start_login
+    description: Render the login button people can use to authorize the GitLab Unfurly app
+    timeout: 5
+    environment:
+      SLACK_CLIENT_ID: ${env:SLACK_CLIENT_ID}
+    events:
+      - http:
+          method: get
+          path: /login
+
+  finish-login:
+    handler: unfurl_message.finish_login
+    description: Send the acquired OAuth2 token to Slack to confirm authorization
+    timeout: 5
+    environment:
+      SLACK_TOKEN: ${env:SLACK_TOKEN}
+      SLACK_CLIENT_ID: ${env:SLACK_CLIENT_ID}
+      SLACK_CLIENT_SECRET: ${env:SLACK_CLIENT_SECRET}
+    events:
+      - http:
+          method: get
+          path: /finish_login
+
+provider:
+  name: aws
+  runtime: python3.6
+  region: ${env:AWS_REGION}
+  memorySize: 128
+
+package:
+  individually: true
+
+plugins:
+  - serverless-python-requirements
+
+custom:
+  pythonRequirements:
+    dockerizePip: true

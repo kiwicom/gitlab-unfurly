@@ -1,0 +1,6 @@
+arrow
+attrs
+slackclient
+requests
+kiwi-structlog-config
+structlog
