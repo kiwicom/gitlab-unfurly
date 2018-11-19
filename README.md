@@ -7,6 +7,10 @@ Serverless Slack bot for unfurling GitLab URLs.
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black) 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/kiwicom/gitlab-unfurly/blob/master/LICENSE)
 
+## Example
+
+![GitLab Unfurly example](/docs/gitlab-unfurly.png)
+
 ## Usage
 
 Deploy on [AWS](https://aws.amazon.com/) using [Serverless](https://serverless.com) 
