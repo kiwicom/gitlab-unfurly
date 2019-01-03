@@ -9,6 +9,7 @@ from urllib.parse import quote, urljoin, urlparse
 
 import arrow
 import attr
+import bleach
 from kw.structlog_config import configure_structlog
 import requests
 from slackclient import SlackClient
@@ -37,6 +38,16 @@ MR_STATE_COLORS = {"opened": "#1aaa55", "merged": "#1f78d1", "closed": "#db3b21"
 
 ###############################################################################
 # GitLab API responses to Slack messages
+
+
+def strip_html_tags(value):
+    return bleach.clean(value, tags=[], strip=True)
+
+
+def prepare_description(description, *, width=100):
+    description = strip_html_tags(description)
+    description = description.strip()
+    return textwrap.shorten(description, width, placeholder="…")
 
 
 def get_data_from_api(session, api_path):
@@ -94,7 +105,7 @@ def get_issue_info(session, path_info):
     return {
         "title": title,
         "fields": fields,
-        "text": textwrap.shorten(description.strip(), width=300, placeholder="…"),
+        "text": prepare_description(description, width=300),
         "color": ISSUE_STATE_COLORS[state],
     }
 
@@ -138,7 +149,7 @@ def get_mr_info(session, path_info):
     return {
         "title": title,
         "fields": fields,
-        "text": textwrap.shorten(description.strip(), width=100, placeholder="…"),
+        "text": prepare_description(description),
         "color": MR_STATE_COLORS[state],
     }
 
@@ -168,10 +179,7 @@ def get_project_info(session, path_info):
     except IndexError as e:
         log.exception("Error in data from GitLab")
 
-    return {
-        "title": name,
-        "text": textwrap.shorten(description.strip(), width=100, placeholder="…"),
-    }
+    return {"title": name, "text": prepare_description(description)}
 
 
 ###############################################################################

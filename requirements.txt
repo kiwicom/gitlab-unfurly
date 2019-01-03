@@ -6,6 +6,7 @@
 #
 arrow==0.12.1
 attrs==18.2.0
+bleach==3.0.2
 certifi==2018.10.15       # via requests
 chardet==3.0.4            # via requests
 colorama==0.4.0           # via structlog
@@ -14,8 +15,9 @@ kiwi-structlog-config==0.1.2
 python-dateutil==2.7.5    # via arrow
 requests==2.20.1
 simplejson==3.16.0        # via kiwi-structlog-config
-six==1.11.0               # via python-dateutil, slackclient, structlog, websocket-client
+six==1.11.0               # via bleach, python-dateutil, slackclient, structlog, websocket-client
 slackclient==1.3.0
 structlog[dev]==18.2.0
 urllib3==1.24.1           # via requests
+webencodings==0.5.1       # via bleach
 websocket-client==0.54.0  # via slackclient

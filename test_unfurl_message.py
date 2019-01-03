@@ -61,3 +61,36 @@ def test_parse_path__wrong():
 )
 def test_path_info__quoted_id(info, expected):
     assert info.quoted_id == expected
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [
+        ("foo", "foo"),
+        ("has multiple words", "has multiple words"),
+        ("has <b>some</b> tags", "has some tags"),
+        ("<IMG SRC=j&#X41vascript:alert('test2')>", ""),
+        ("has <!-- secret --> comment", "has  comment"),
+    ],
+)
+def test_strip_html_tags(value, expected):
+    assert uut.strip_html_tags(value) == expected
+
+
+def test_prepare_description():
+    description = (
+        "I'd just like to interject for a moment. <!-- Yes please! --> What you’re "
+        "referring to as Linux, is in fact, <b>GNU/Linux</b>, or as I’ve recently "
+        "taken to calling it, GNU plus Linux."
+    )
+    expected = (
+        "I'd just like to interject for a moment. What you’re referring to as "
+        "Linux, is in fact, GNU/Linux,…"
+    )
+    assert uut.prepare_description(description) == expected
+
+
+def test_prepare_description__custom_width():
+    description = "Correct Horse Battery Staple"
+    expected = "Correct Horse…"
+    assert uut.prepare_description(description, width=15) == expected

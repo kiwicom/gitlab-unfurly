@@ -4,3 +4,4 @@ slackclient
 requests
 kiwi-structlog-config
 structlog
+bleach
