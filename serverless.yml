@@ -8,6 +8,7 @@ functions:
     environment:
       SLACK_TOKEN: ${env:SLACK_TOKEN}
       GITLAB_TOKEN: ${env:GITLAB_TOKEN}
+      GITLAB_URL: ${env:GITLAB_URL}
     events:
       - http:
           method: post
