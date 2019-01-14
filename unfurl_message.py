@@ -107,6 +107,8 @@ def get_issue_info(session, path_info):
         "fields": fields,
         "text": prepare_description(description, width=300),
         "color": ISSUE_STATE_COLORS[state],
+        "ts": arrow.get(data["created_at"]).timestamp,
+        "footer": "Issue",
     }
 
 
@@ -151,6 +153,8 @@ def get_mr_info(session, path_info):
         "fields": fields,
         "text": prepare_description(description),
         "color": MR_STATE_COLORS[state],
+        "ts": arrow.get(data["created_at"]).timestamp,
+        "footer": "Merge request",
     }
 
 
@@ -164,7 +168,12 @@ def get_commit_info(session, path_info):
     except IndexError as e:
         log.exception("Error in data from GitLab")
 
-    attachment = {"title": title, "author_name": author_name}
+    attachment = {
+        "title": title,
+        "author_name": author_name,
+        "ts": arrow.get(data["created_at"]).timestamp,
+        "footer": "Commit",
+    }
 
     return attachment
 
@@ -179,7 +188,12 @@ def get_project_info(session, path_info):
     except IndexError as e:
         log.exception("Error in data from GitLab")
 
-    return {"title": name, "text": prepare_description(description)}
+    return {
+        "title": name,
+        "text": prepare_description(description),
+        "ts": arrow.get(data["created_at"]).timestamp,
+        "footer": "Project",
+    }
 
 
 ###############################################################################
