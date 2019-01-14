@@ -49,6 +49,13 @@ def prepare_description(description, *, width=100):
     return textwrap.shorten(description, width, placeholder="…")
 
 
+def format_user(user, warn_blocked=False):
+    if user["state"] == "blocked":
+        tag = "(blocked) :warning:" if warn_blocked else "(blocked)"
+        return f"{user['username']} {tag}"
+    return user["username"]
+
+
 def get_data_from_api(session, api_path):
     response = session.get(urljoin(GITLAB_URL, api_path))
     response.raise_for_status()
@@ -67,9 +74,9 @@ def get_issue_info(session, path_info):
         milestone = data["milestone"]
         if data["assignees"]:
             assignee = ", ".join(
-                f"@{assignee['username']}" for assignee in data["assignees"]
+                format_user(assignee, warn_blocked=True)
+                for assignee in data["assignees"]
             )
-        author = "@" + data["author"]["username"]
         state = data["state"]
     except IndexError as e:
         log.exception("Error in data from GitLab")
@@ -78,10 +85,7 @@ def get_issue_info(session, path_info):
     if state != "opened":
         title += f" ({state})"
 
-    fields = [
-        {"title": "Author", "value": author, "short": "true"},
-        {"title": "Assignee", "value": assignee, "short": "true"},
-    ]
+    fields = [{"title": "Assignee", "value": assignee, "short": "true"}]
 
     if due_date:
         formatted_date = (
@@ -102,6 +106,9 @@ def get_issue_info(session, path_info):
         )
 
     return {
+        "author_name": format_user(data["author"]),
+        "author_link": data["author"]["web_url"],
+        "author_icon": data["author"]["avatar_url"],
         "title": title,
         "fields": fields,
         "text": prepare_description(description, width=300),
@@ -122,8 +129,7 @@ def get_mr_info(session, path_info):
         title = data["title"].strip()
         description = data["description"] or ""
         if data["assignee"]:
-            assignee = "@" + data["assignee"]["username"]
-        author = "@" + data["author"]["username"]
+            assignee = format_user(data["assignee"], warn_blocked=True)
         milestone = data["milestone"]
         state = data["state"]
     except IndexError as e:
@@ -133,10 +139,7 @@ def get_mr_info(session, path_info):
     if state != "opened":
         title += f" ({state})"
 
-    fields = [
-        {"title": "Author", "value": author, "short": "true"},
-        {"title": "Assignee", "value": assignee, "short": "true"},
-    ]
+    fields = [{"title": "Assignee", "value": assignee, "short": "true"}]
 
     if milestone:
         fields.append(
@@ -148,12 +151,15 @@ def get_mr_info(session, path_info):
         )
 
     return {
+        "author_name": format_user(data["author"]),
+        "author_link": data["author"]["web_url"],
+        "author_icon": data["author"]["avatar_url"],
         "title": title,
         "fields": fields,
         "text": prepare_description(description),
         "color": MR_STATE_COLORS[state],
         "ts": arrow.get(data["created_at"]).timestamp,
-        "footer": "Merge request",
+        "footer": "Merge Request",
     }
 
 
@@ -182,13 +188,15 @@ def get_project_info(session, path_info):
     data = get_data_from_api(session, api_path)
 
     try:
-        name = data["name_with_namespace"]
         description = data["description"] or ""
     except IndexError as e:
         log.exception("Error in data from GitLab")
 
     return {
-        "title": name,
+        "author_name": data["namespace"]["name"],
+        "author_link": urljoin(GITLAB_URL, data["namespace"]["full_path"]),
+        "thumb_url": data["avatar_url"],
+        "title": data["name"],
         "text": prepare_description(description),
         "ts": arrow.get(data["created_at"]).timestamp,
         "footer": "Project",
