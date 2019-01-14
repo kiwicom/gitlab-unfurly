@@ -35,7 +35,6 @@ OK_RESPONSE = {"statusCode": 204, "body": ""}
 ISSUE_STATE_COLORS = {"opened": "#1aaa55", "closed": "#1f78d1"}
 MR_STATE_COLORS = {"opened": "#1aaa55", "merged": "#1f78d1", "closed": "#db3b21"}
 
-
 ###############################################################################
 # GitLab API responses to Slack messages
 
@@ -259,39 +258,51 @@ def unfurl(event, context):
     slack = SlackClient(SLACK_TOKEN)
 
     request_json = json.loads(event["body"])
-    raw_url = request_json["event"]["links"][0]["url"]
-    url = urlparse(raw_url.replace("\\", ""))
-    log.bind(url=url)
-    if "no_unfurl" in url.query:
-        log.info("Skipping URL as requested")
-        return OK_RESPONSE
 
-    try:
-        path_info = parse_path(url.path)
-    except ValueError as exc:
-        log.error("Can't parse path")
-        return OK_RESPONSE
+    # handle Slack url verification
+    if request_json["type"] == "url_verification":
+        return {
+            "statusCode": 200,
+            "body": request_json["challenge"],
+            "headers": {"content-type": "text/plain"},
+        }
 
-    if path_info.type == PathType.ISSUE:
-        attachment = get_issue_info(session, path_info)
-    elif path_info.type == PathType.MERGE_REQUEST:
-        attachment = get_mr_info(session, path_info)
-    elif path_info.type == PathType.COMMIT:
-        attachment = get_commit_info(session, path_info)
-    elif path_info.type == PathType.PROJECT:
-        attachment = get_project_info(session, path_info)
-    else:
-        log.error(f"Unhandled path type: {path_info.type}")
-        return OK_RESPONSE
+    # handle unfurl
+    for link in request_json["event"]["links"]:
+        raw_url = link["url"]
+        url = urlparse(raw_url.replace("\\", ""))
+        log.bind(url=url)
+        if "no_unfurl" in url.query:
+            log.info("Skipping URL as requested")
+            continue
 
-    attachment["title_link"] = raw_url
-    r = slack.api_call(
-        "chat.unfurl",
-        channel=request_json["event"]["channel"],
-        ts=request_json["event"]["message_ts"],
-        unfurls={raw_url: attachment},
-    )
-    log.info("Slack API call", response=r)
+        try:
+            path_info = parse_path(url.path)
+        except ValueError as exc:
+            log.error("Can't parse path")
+            continue
+
+        if path_info.type == PathType.ISSUE:
+            attachment = get_issue_info(session, path_info)
+        elif path_info.type == PathType.MERGE_REQUEST:
+            attachment = get_mr_info(session, path_info)
+        elif path_info.type == PathType.COMMIT:
+            attachment = get_commit_info(session, path_info)
+        elif path_info.type == PathType.PROJECT:
+            attachment = get_project_info(session, path_info)
+        else:
+            log.error(f"Unhandled path type: {path_info.type}")
+            continue
+
+        attachment["title_link"] = raw_url
+        r = slack.api_call(
+            "chat.unfurl",
+            channel=request_json["event"]["channel"],
+            ts=request_json["event"]["message_ts"],
+            unfurls={raw_url: attachment},
+        )
+        log.info("Slack API call", response=r)
+
     return OK_RESPONSE
 
 
