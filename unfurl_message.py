@@ -210,7 +210,7 @@ class PathInfo:
 
 def parse_path(path):
     # issue, merge request or commit path
-    pattern = r"^\/(?P<team>[\w-]+)\/(?P<subgroups>[\w/-]*?)\/?(?P<project>[\w-]+)\/(?P<type>issues|merge_requests|commit)\/(?P<identifier>\w+)\/?$"
+    pattern = r"^\/(?P<team>[\w-]+)\/(?P<subgroups>[\w/-]*?)\/?(?P<project>[\w-]+)\/(?P<type>issues|merge_requests|commit)\/(?P<identifier>\w+).*$"
     m = re.match(pattern, path)
     if m:
         return PathInfo(

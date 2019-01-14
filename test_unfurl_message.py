@@ -33,6 +33,10 @@ import unfurl_message as uut
             uut.PathInfo(uut.PathType.MERGE_REQUEST, "sea", "fish", "31", "deep"),
         ),
         (
+            "/sea/deep/fish/merge_requests/31/diffs",
+            uut.PathInfo(uut.PathType.MERGE_REQUEST, "sea", "fish", "31", "deep"),
+        ),
+        (
             "/kiwi/x/y/com/commit/abcdef",
             uut.PathInfo(uut.PathType.COMMIT, "kiwi", "com", "abcdef", "x/y"),
         ),
