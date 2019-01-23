@@ -3,49 +3,96 @@ import pytest
 import unfurl_message as uut
 
 
-@pytest.mark.parametrize("trailing_slash", [True, False])
 @pytest.mark.parametrize(
-    "path, info",
+    "path, fragment, info",
     [
-        ("/kiwicom/zoo", uut.PathInfo(uut.PathType.PROJECT, "kiwicom", "zoo")),
+        ("/platform/zoo", None, uut.PathInfo(uut.PathType.PROJECT, "platform", "zoo")),
         (
             "/dev-ops/crane/issues/6",
+            None,
             uut.PathInfo(uut.PathType.ISSUE, "dev-ops", "crane", "6"),
         ),
         (
-            "/orbit/components/merge_requests/9",
-            uut.PathInfo(uut.PathType.MERGE_REQUEST, "orbit", "components", "9"),
+            "/cia/gun/merge_requests/4",
+            None,
+            uut.PathInfo(uut.PathType.MERGE_REQUEST, "cia", "gun", "4"),
         ),
         (
             "/ITC/crane/commit/iddqd",
+            None,
             uut.PathInfo(uut.PathType.COMMIT, "ITC", "crane", "iddqd"),
         ),
         (
             "/fbi/a/b/c/jail",
+            None,
             uut.PathInfo(uut.PathType.PROJECT, "fbi", "jail", None, "a/b/c"),
         ),
         (
-            "/planets/solar-system/earth/issues/42",
-            uut.PathInfo(uut.PathType.ISSUE, "planets", "earth", "42", "solar-system"),
+            "/planets/solar-system/earth/issues/9",
+            None,
+            uut.PathInfo(uut.PathType.ISSUE, "planets", "earth", "9", "solar-system"),
         ),
         (
             "/sea/deep/fish/merge_requests/31",
-            uut.PathInfo(uut.PathType.MERGE_REQUEST, "sea", "fish", "31", "deep"),
-        ),
-        (
-            "/sea/deep/fish/merge_requests/31/diffs",
+            None,
             uut.PathInfo(uut.PathType.MERGE_REQUEST, "sea", "fish", "31", "deep"),
         ),
         (
             "/kiwi/x/y/com/commit/abcdef",
+            None,
             uut.PathInfo(uut.PathType.COMMIT, "kiwi", "com", "abcdef", "x/y"),
+        ),
+        (
+            "/kiwi/com/pipelines/2134",
+            None,
+            uut.PathInfo(uut.PathType.PIPELINE, "kiwi", "com", "2134"),
+        ),
+        (
+            "/kiwi/x/y/com/pipelines/2134",
+            None,
+            uut.PathInfo(uut.PathType.PIPELINE, "kiwi", "com", "2134", "x/y"),
+        ),
+        (
+            "/kiwi/com/-/jobs/2134",
+            None,
+            uut.PathInfo(uut.PathType.JOB, "kiwi", "com", "2134"),
+        ),
+        (
+            "/kiwi/x/y/com/-/jobs/2134",
+            None,
+            uut.PathInfo(uut.PathType.JOB, "kiwi", "com", "2134", "x/y"),
+        ),
+        (
+            "/kiwi/com/issues/37",
+            "note_746624",
+            uut.PathInfo(uut.PathType.NOTE_ISSUE, "kiwi", "com", "37", None, "746624"),
+        ),
+        (
+            "/kiwi/x/y/com/issues/37",
+            "note_746624",
+            uut.PathInfo(uut.PathType.NOTE_ISSUE, "kiwi", "com", "37", "x/y", "746624"),
+        ),
+        (
+            "/kiwi/com/merge_requests/8",
+            "note_861109",
+            uut.PathInfo(
+                uut.PathType.NOTE_MERGE_REQUESTS, "kiwi", "com", "8", None, "861109"
+            ),
+        ),
+        (
+            "/kiwi/x/y/com/merge_requests/8",
+            "note_861109",
+            uut.PathInfo(
+                uut.PathType.NOTE_MERGE_REQUESTS, "kiwi", "com", "8", "x/y", "861109"
+            ),
         ),
     ],
 )
-def test_parse_path(trailing_slash, path, info):
-    if trailing_slash:
-        path = f"{path}/"
-    assert uut.parse_path(path) == info
+def test_parse_path(path, fragment, info):
+    assert uut.parse_path(path, fragment) == info
+
+    if not path.endswith("/"):
+        assert uut.parse_path(f"{path}/", fragment) == info
 
 
 def test_parse_path__wrong():
@@ -98,3 +145,43 @@ def test_prepare_description__custom_width():
     description = "Correct Horse Battery Staple"
     expected = "Correct Horse…"
     assert uut.prepare_description(description, width=15) == expected
+
+
+@pytest.mark.parametrize(
+    ("path_info", "handler"),
+    [
+        (
+            uut.PathInfo(uut.PathType.ISSUE, "dev-ops", "crane", "6"),
+            uut.get_issues_info,
+        ),
+        (
+            uut.PathInfo(uut.PathType.PIPELINE, "kiwi", "com", "2134", "x/y"),
+            uut.get_pipelines_info,
+        ),
+        (uut.PathInfo(uut.PathType.JOB, "kiwi", "com", "2134"), uut.get_jobs_info),
+        (
+            uut.PathInfo(uut.PathType.COMMIT, "kiwi", "com", "abcdef", "x/y"),
+            uut.get_commit_info,
+        ),
+        (
+            uut.PathInfo(uut.PathType.MERGE_REQUEST, "sea", "fish", "31", "deep"),
+            uut.get_merge_requests_info,
+        ),
+        (
+            uut.PathInfo(uut.PathType.PROJECT, "fbi", "jail", None, "a/b/c"),
+            uut.get_project_info,
+        ),
+        (
+            uut.PathInfo(uut.PathType.NOTE_ISSUE, "kiwi", "com", "37", "x/y", "746624"),
+            uut.get_note_issues_info,
+        ),
+        (
+            uut.PathInfo(
+                uut.PathType.NOTE_MERGE_REQUESTS, "kiwi", "com", "8", None, "861109"
+            ),
+            uut.get_note_merge_requests_info,
+        ),
+    ],
+)
+def test_get_handler(path_info, handler):
+    assert uut.get_handler(path_info) == handler
