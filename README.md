@@ -37,3 +37,12 @@ Code is formatted by [Black](https://github.com/ambv/black).
 ## License
 
 [MIT](https://github.com/kiwicom/gitlab-unfurly/blob/master/LICENSE)
+
+## FAQ
+
+1. **How to make unfurly ignore my urls (= not create previews)?**  
+Append `?no_unfurl` to the url.
+
+2. **Is there a way to disable unfurly for the whole post?**  
+Unfortunately no. Unfurly receives links from slack 1-by-1. Therefore it has no knowledge about
+links being part of the same post.
