@@ -1,6 +1,9 @@
 import pytest
+import requests
 
 import unfurl_message as uut
+from urllib.parse import urljoin
+
 
 
 @pytest.mark.parametrize(
@@ -185,3 +188,170 @@ def test_prepare_description__custom_width():
 )
 def test_get_handler(path_info, handler):
     assert uut.get_handler(path_info) == handler
+
+
+
+@pytest.mark.parametrize(
+    ("name", "api_resp", "want", "want_error"),
+    [
+        (
+                "should return nothing for empty api response",
+                '{}',
+                None,
+                KeyError
+        ),
+        (
+            "happy path",
+            """
+            {
+               "id":1,
+               "iid":1,
+               "project_id":3,
+               "title":"test1",
+               "description":"fixed login page css paddings",
+               "state":"merged",
+               "created_at":"2017-04-29T08:46:00Z",
+               "updated_at":"2017-04-29T08:46:00Z",
+               "target_branch":"master",
+               "source_branch":"test1",
+               "upvotes":0,
+               "downvotes":0,
+               "author":{
+                  "id":1,
+                  "name":"Administrator",
+                  "username":"admin",
+                  "state":"active",
+                  "avatar_url":null,
+                  "web_url":"https://gitlab.example.com/admin"
+               },
+               "user":{
+                  "can_merge":false
+               },
+               "assignee":{
+                  "id":1,
+                  "name":"Administrator",
+                  "username":"admin",
+                  "state":"active",
+                  "avatar_url":null,
+                  "web_url":"https://gitlab.example.com/admin"
+               },
+               "assignees":[
+                  {
+                     "name":"Miss Monserrate Beier",
+                     "username":"axel.block",
+                     "id":12,
+                     "state":"active",
+                     "avatar_url":"http://www.gravatar.com/avatar/46f6f7dc858ada7be1853f7fb96e81da?s=80&d=identicon",
+                     "web_url":"https://gitlab.example.com/axel.block"
+                  }
+               ],
+               "source_project_id":2,
+               "target_project_id":3,
+               "labels":[
+                  "Community contribution",
+                  "Manage"
+               ],
+               "work_in_progress":false,
+               "milestone":{
+                  "id":5,
+                  "iid":1,
+                  "project_id":3,
+                  "title":"v2.0",
+                  "description":"Assumenda aut placeat expedita exercitationem labore sunt enim earum.",
+                  "state":"closed",
+                  "created_at":"2015-02-02T19:49:26.013Z",
+                  "updated_at":"2015-02-02T19:49:26.013Z",
+                  "due_date":"2018-09-22",
+                  "start_date":"2018-08-08",
+                  "web_url":"https://gitlab.example.com/my-group/my-project/milestones/1"
+               },
+               "merge_when_pipeline_succeeds":true,
+               "merge_status":"can_be_merged",
+               "merge_error":null,
+               "sha":"8888888888888888888888888888888888888888",
+               "merge_commit_sha":null,
+               "user_notes_count":1,
+               "discussion_locked":null,
+               "should_remove_source_branch":true,
+               "force_remove_source_branch":false,
+               "allow_collaboration":false,
+               "allow_maintainer_to_push":false,
+               "web_url":"http://gitlab.example.com/my-group/my-project/merge_requests/1",
+               "time_stats":{
+                  "time_estimate":0,
+                  "total_time_spent":0,
+                  "human_time_estimate":null,
+                  "human_total_time_spent":null
+               },
+               "squash":false,
+               "subscribed":false,
+               "changes_count":"1",
+               "merged_by":{
+                  "id":87854,
+                  "name":"Douwe Maan",
+                  "username":"DouweM",
+                  "state":"active",
+                  "avatar_url":"https://gitlab.example.com/uploads/-/system/user/avatar/87854/avatar.png",
+                  "web_url":"https://gitlab.com/DouweM"
+               },
+               "merged_at":"2018-09-07T11:16:17.520Z",
+               "closed_by":null,
+               "closed_at":null,
+               "latest_build_started_at":"2018-09-07T07:27:38.472Z",
+               "latest_build_finished_at":"2018-09-07T08:07:06.012Z",
+               "first_deployed_to_production_at":null,
+               "pipeline":{
+                  "id":29626725,
+                  "sha":"2be7ddb704c7b6b83732fdd5b9f09d5a397b5f8f",
+                  "ref":"patch-28",
+                  "status":"success",
+                  "web_url":"https://gitlab.example.com/my-group/my-project/pipelines/29626725"
+               },
+               "diff_refs":{
+                  "base_sha":"c380d3acebd181f13629a25d2e2acca46ffe1e00",
+                  "head_sha":"2be7ddb704c7b6b83732fdd5b9f09d5a397b5f8f",
+                  "start_sha":"c380d3acebd181f13629a25d2e2acca46ffe1e00"
+               },
+               "diverged_commits_count":2,
+               "rebase_in_progress":false,
+               "approvals_before_merge":null
+            }
+            """,
+            {
+                "author_name": 'admin',
+                "author_link": 'https://gitlab.example.com/admin',
+                "author_icon": None,
+                "title": 'test1 (merged)',
+                "fields": [
+                    {"title": "Assignee", "value": "admin", "short": "true"},
+                    {"title": "Diffs", "value": '1', "short": "true"},
+                    {
+                        "title": "Milestone",
+                        "value": '<https://gitlab.example.com/my-group/my-project/milestones/1|v2.0>',
+                        "short": "true",
+                    }
+                ],
+                "text": "fixed login page css paddings",
+                "color": '#1f78d1',
+                "ts": 1493455560,
+                "footer": "Merge Request",
+            },
+            None
+        )
+    ],
+)
+def test_get_merge_requests_info(requests_mock, name, api_resp, want, want_error):
+    pi = uut.PathInfo(uut.PathType.MERGE_REQUEST, "test_team","test_project","test_id", "test_subgroup")
+    api_path =  f"/api/v4/projects/{pi.quoted_id}/merge_requests/{pi.identifier}"
+    uut.GITLAB_URL = 'http://192.0.2.1:1234'
+
+    requests_mock.get(urljoin(uut.GITLAB_URL, api_path), text=api_resp)
+    s = requests.Session()
+
+    if want_error:
+        with pytest.raises(want_error):
+            uut.get_merge_requests_info(s, pi)
+        return
+    got = uut.get_merge_requests_info(s, pi)
+
+    assert want == got

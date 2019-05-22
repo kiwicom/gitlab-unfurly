@@ -186,6 +186,7 @@ def get_merge_requests_info(session, path_info):
             assignee = format_user(data["assignee"], warn_blocked=True)
         milestone = data["milestone"]
         state = data["state"]
+        diffs = data["changes_count"]
     except IndexError as e:
         log.exception("Error in data from GitLab")
         raise
@@ -194,6 +195,10 @@ def get_merge_requests_info(session, path_info):
         title += f" ({state})"
 
     fields = [{"title": "Assignee", "value": assignee, "short": "true"}]
+    if diffs:
+        fields.append(
+            {"title": "Diffs", "value": diffs, "short": "true"}
+        )
 
     if milestone:
         fields.append(
