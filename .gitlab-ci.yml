@@ -1,0 +1,18 @@
+image: kiwicom/sls
+
+deploy:
+  stage: deploy
+  environment: 
+    name: development
+    on_stop: stop_environment
+  before_script:
+    - serverless plugin install -n serverless-python-requirements
+  script: serverless deploy
+
+stop_environment:
+  stage: deploy
+  environment: 
+    name: development
+    action: stop
+  when: manual
+  script: serverless remove
