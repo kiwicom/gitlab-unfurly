@@ -186,6 +186,8 @@ def get_merge_requests_info(session, path_info):
             assignee = format_user(data["assignee"], warn_blocked=True)
         milestone = data["milestone"]
         state = data["state"]
+        source_branch = data["source_branch"]
+        target_branch = data["target_branch"]
     except IndexError as e:
         log.exception("Error in data from GitLab")
         raise
@@ -193,7 +195,10 @@ def get_merge_requests_info(session, path_info):
     if state != "opened":
         title += f" ({state})"
 
-    fields = [{"title": "Assignee", "value": assignee, "short": "true"}]
+    fields = [
+        {"title": "Merge Request", "value": f"{source_branch} into {target_branch}"},
+        {"title": "Assignee", "value": assignee, "short": "false"},
+    ]
 
     if milestone:
         fields.append(
@@ -212,8 +217,7 @@ def get_merge_requests_info(session, path_info):
         "fields": fields,
         "text": prepare_description(description),
         "color": MR_STATE_COLORS[state],
-        "ts": arrow.get(data["created_at"]).timestamp,
-        "footer": "Merge Request",
+        "ts": arrow.get(data["created_at"]).timestamp
     }
 
 
