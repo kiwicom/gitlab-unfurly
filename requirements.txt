@@ -6,7 +6,7 @@
 #
 arrow==0.12.1
 attrs==18.2.0
-bleach==3.0.2
+bleach==3.1.1
 certifi==2018.10.15       # via requests
 chardet==3.0.4            # via requests
 colorama==0.4.0           # via structlog
