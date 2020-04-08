@@ -18,6 +18,6 @@ simplejson==3.16.0        # via kiwi-structlog-config
 six==1.11.0               # via bleach, python-dateutil, slackclient, structlog, websocket-client
 slackclient==1.3.0        # via -r requirements.in
 structlog[dev]==18.2.0    # via -r requirements.in, kiwi-structlog-config
-urllib3==1.24.1           # via requests
+urllib3==1.24.2           # via requests
 webencodings==0.5.1       # via bleach
 websocket-client==0.54.0  # via slackclient
