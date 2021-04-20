@@ -4,10 +4,19 @@
 #
 #    pip-compile --output-file test-requirements.txt test-requirements.in
 #
-atomicwrites==1.2.1       # via pytest
-attrs==18.2.0             # via pytest
-more-itertools==4.3.0     # via pytest
-pluggy==0.8.0             # via pytest
-py==1.7.0                 # via pytest
+atomicwrites==1.2.1
+    # via pytest
+attrs==18.2.0
+    # via pytest
+more-itertools==4.3.0
+    # via pytest
+pluggy==0.8.0
+    # via pytest
+py==1.10.0
+    # via pytest
 pytest==4.0.0
-six==1.11.0               # via more-itertools, pytest
+    # via -r test-requirements.in
+six==1.11.0
+    # via
+    #   more-itertools
+    #   pytest
